@@ -114,7 +114,7 @@ QUnit.asyncTest("use model", function() {
 
 
 
-QUnit.asyncTest("test query", function() {
+QUnit.asyncTest("test simple queries", function() {
 	expect(9);
 	
 	var storeProvider = new rearside.provider.Memory();
@@ -135,7 +135,6 @@ QUnit.asyncTest("test query", function() {
 	store.add(myTask);
 	
 	store.flush(function() {
-		// 'not in'
 		
 		Task.query(store).filter("name", "contains", "test").list(function(results) {
 			
@@ -196,6 +195,88 @@ QUnit.asyncTest("test query", function() {
 		Task.query(store).filter("name", "contains", "test").filter("count", ">=", 25).list(function(results) {
 			
 			ok(results.length == 1, "Found 'contains' and '>=' entry");
+			start();
+			
+		});
+		
+	});
+});
+
+
+QUnit.asyncTest("test and/or queries", function() {
+	expect(3);
+	
+	var storeProvider = new rearside.provider.Memory();
+	var store = new rearside.Store(storeProvider);
+
+	var Task = rearside.Model('Task4', {
+		name: "string",
+		description: "string",
+		done: "boolean",
+		count: "number"
+	});
+	
+	var myTask = new Task({
+		name: "My test",
+		count: 25
+	});
+	
+	store.add(myTask);
+	
+	store.flush(function() {
+		
+		var f1 = new rearside.filter.PropertyFilter("count", "=", 25);
+		Task.query(store).filter("name", "contains", "test").and(f1).list(function(results) {
+			
+			ok(results.length == 1, "true and true");
+			start();
+			
+		});
+		
+		Task.query(store).filter("name", "contains", "abc").and(f1).list(function(results) {
+			
+			ok(results.length == 0, "false and true");
+			start();
+			
+		});
+		
+		Task.query(store).filter("name", "contains", "abc").or(f1).list(function(results) {
+			
+			ok(results.length == 1, "false or true");
+			start();
+			
+		});
+		
+	});
+});
+
+
+QUnit.asyncTest("test other modifications queries", function() {
+	expect(1);
+	
+	var storeProvider = new rearside.provider.Memory();
+	var store = new rearside.Store(storeProvider);
+
+	var Task = rearside.Model('Task5', {
+		name: "string",
+		count: "number"
+	});
+	
+	var myTask;
+	for (var i=0; i<15; i++) {
+		myTask = new Task({
+			name: "My test " + i,
+			count: i
+		});
+		
+		store.add(myTask);
+	}
+	
+	store.flush(function() {
+		
+		Task.query(store).limit(5).list(function(results) {
+			
+			equal(results.length, 5, "Query 5 results");
 			start();
 			
 		});

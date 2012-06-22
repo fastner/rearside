@@ -49,7 +49,7 @@
 				callback(entity);
 			},
 			
-			query : function(callback, meta, filter) {
+			query : function(callback, meta, filter, limit) {
 				var data = this.__data;
 				var result = [];
 				
@@ -61,8 +61,12 @@
 					if (meta.name == entry.type) {
 						entry.data.id = entry.id;
 						
-						if (filter.match(entry.data)) {
+						if ((!filter) || filter.match(entry.data)) {
 							result.push(new EntityModel(entry.data));
+							console.log(result.length, limit);
+							if (result.length >= limit) {
+								break;
+							}
 						}
 					}
 				}

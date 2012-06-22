@@ -70,8 +70,8 @@
 				if (todo == 0) callback();
 			},
 			
-			query : function(callback, meta, filter) {
-				this.__storeProvider.query(callback, meta, filter);
+			query : function(callback, meta, filter, limit) {
+				this.__storeProvider.query(callback, meta, filter, limit);
 			}
 		}
 	});
