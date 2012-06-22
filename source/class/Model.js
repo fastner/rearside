@@ -54,8 +54,24 @@
 			return this._dirtyProperties.length > 0;
 		},
 		
-		getStore : function() {
+		getStores : function() {
 			return this._store;
+		},
+		
+		addStore : function(store) {
+			this._store.push(store);
+			if (this.isDirty()) {
+				store.queue(this);
+			}
+		},
+		
+		removeStore : function(store) {
+			var stores = this._store;
+			
+			var pos = stores.indexOf(store);
+			if (pos >= 0) {
+				stores.splice(pos, 1);
+			}
 		},
 		
 		set : function(name, value) {
@@ -80,9 +96,21 @@
 				this._dirtyProperties.push(name);
 			}
 			
-			this._store.queue(this);
+			var store = this._store;
+			for (var i = 0, ii=store.length; i<ii; i++) {
+				store.queue(this);
+			}
 			
 			return value;
+		},
+		
+		toJSONString : function() {
+			var el = {
+				id: this._id,
+				type: this._meta.name,
+				data: this._data
+			};
+			return JSON.stringify(el);
 		}
 	};
 	
@@ -94,18 +122,19 @@
 		
 		var meta = entityCache[name];
 		
-		var clazz = entityClassCache[name] = function(store, config) {
+		var clazz = entityClassCache[name] = function(config) {
 			this._meta = meta;
 			var data = this._data = {};
 			this._id = config.id || createUUID();
-			this._dirtyProperties = [];
-			this._store = store;
+			var dirtyProperties = this._dirtyProperties = [];
+			this._store = [];
 			
 			var fields = meta.fields;
 			for (var key in fields) {
 				var field = fields[key];
 				if (field) {
 					data[key] = config[key] || getDefaultValue(fields[key]);
+					dirtyProperties.push(key);
 				} else {
 					throw new Error("Field " + key + " is not defined in model " + meta.name);
 				}
@@ -117,6 +146,10 @@
 			proto[key] = entityMembers[key];
 		}
 		
+		clazz.query = function(store) {
+			return new rearside.Query(store, meta);
+		};
+		
 		return clazz;
 	};
 	
@@ -126,16 +159,18 @@
 			if (!core.Module.isModuleName(name)) {
 				throw new Error("Invalid model name " + name + "!");
 			}
-			
+		}
+		
+		if (entityCache[name]) {
+			return getEntity(name);
+		}
+		
+		if (core.Env.isSet("debug")) {
 			core.Assert.isType(config, "Map", "Invalid model configuration in " + name);
 			
 			if (entityCache[name]) {
 				throw new Error("Model " + name + " is already created!");
 			}
-		}
-		
-		if (entityCache[name]) {
-			return getEntity(name);
 		}
 		
 		var meta = {
