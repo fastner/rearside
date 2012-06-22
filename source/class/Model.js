@@ -40,6 +40,49 @@
 			}
 			
 			return this._data[name];
+		},
+		
+		id : function() {
+			return this._id;
+		},
+		
+		dirtyProperties : function() {
+			return this._dirtyProperties.slice();
+		},
+		
+		isDirty : function() {
+			return this._dirtyProperties.length > 0;
+		},
+		
+		getStore : function() {
+			return this._store;
+		},
+		
+		set : function(name, value) {
+			if (core.Env.getValue("debug")) {
+				if (!this._meta.fields[name]) {
+					throw new Error("No field " + name + " in model " + this._meta.name);
+				}
+				
+				if (typeof value != this._meta.fields[name]) {
+					throw new Error("Value " + value + " is not of type " + this._meta.fields[name] + " in model " + this._meta.name);
+				}
+				
+				if (name == "id") {
+					throw new Error("Change of ID in model " + this._meta.name + " is not allowed");
+				}
+			}
+			
+			this._data[name] = value;
+			
+			var dirtyProperties = this._dirtyProperties;
+			if (dirtyProperties.indexOf(name) < 0) {
+				this._dirtyProperties.push(name);
+			}
+			
+			this._store.queue(this);
+			
+			return value;
 		}
 	};
 	
@@ -51,11 +94,12 @@
 		
 		var meta = entityCache[name];
 		
-		var clazz = entityClassCache[name] = function(config) {
+		var clazz = entityClassCache[name] = function(store, config) {
 			this._meta = meta;
 			var data = this._data = {};
 			this._id = config.id || createUUID();
-			this._dirtyProperties = {};
+			this._dirtyProperties = [];
+			this._store = store;
 			
 			var fields = meta.fields;
 			for (var key in fields) {
