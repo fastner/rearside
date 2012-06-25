@@ -13,6 +13,7 @@
 			__filter : null,
 			__limit : null,
 			__order : null,
+			__idFilter : null,
 			__skip : 0,
 			
 			__addFilter : function(filter) {
@@ -31,6 +32,12 @@
 				} else {
 					this.__filter = filter;
 				}
+			},
+			
+			find : function(ids) {
+				this.__idFilter = ids;
+				
+				return this;
 			},
 			
 			filter : function(property, check, value) {
@@ -73,15 +80,17 @@
 			},
 			
 			count : function(callback) {
-				this.__store.count(callback, this.__meta, this.__filter, this.__limit, this.__skip, this.__order);
+				this.__store.count(callback, this.__meta, this.__filter, this.__idFilter, this.__limit, this.__skip, this.__order);
 			},
 			
 			one : function(callback) {
-				this.__store.query(callback, this.__meta, this.__filter, 1, this.__skip, this.__order);
+				this.__store.query(function(result) {
+					callback(result ? result[0] : null);
+				}, this.__meta, this.__filter, this.__idFilter, 1, this.__skip, this.__order);
 			},
 			
 			list : function(callback) {
-				this.__store.query(callback, this.__meta, this.__filter, this.__limit, this.__skip, this.__order);
+				this.__store.query(callback, this.__meta, this.__filter, this.__idFilter, this.__limit, this.__skip, this.__order);
 			}
 		}
 	});

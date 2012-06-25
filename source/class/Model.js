@@ -1,5 +1,7 @@
 (function(){
 	
+	var now = window.now || function() { return (new Date).valueOf(); };
+	
 	var entityCache = {};
 	var entityClassCache = {};
 	
@@ -32,18 +34,16 @@
 	};
 	
 	var entityMembers = {
-		get : function(name) {
-			if (core.Env.getValue("debug")) {
-				if (!this._meta.fields[name]) {
-					throw new Error("No field " + name + " in model " + this._meta.name);
-				}
-			}
-			
-			return this._data[name];
-		},
-		
 		id : function() {
 			return this._id;
+		},
+		
+		timestamp : function() {
+			return this._timestamp;
+		},
+		
+		getType : function() {
+			return this._meta.name;
 		},
 		
 		dirtyProperties : function() {
@@ -54,66 +54,132 @@
 			return this._dirtyProperties.length > 0;
 		},
 		
-		getStores : function() {
+		getStore : function() {
 			return this._store;
 		},
 		
-		addStore : function(store) {
-			this._store.push(store);
+		setStore : function(store) {
+			if (this._store) {
+				return false;
+			}
+			this._store = store;
+			
 			if (this.isDirty()) {
 				store.queue(this);
 			}
+			
+			return true;
 		},
 		
 		removeStore : function(store) {
-			var stores = this._store;
+			var mystore = this._store;
 			
-			var pos = stores.indexOf(store);
-			if (pos >= 0) {
-				stores.splice(pos, 1);
+			if (mystore === store) {
+				this._store = null;
+				return true;
+			} else {
+				return false;
 			}
 		},
 		
-		set : function(name, value) {
+		get : function(name) {
 			if (core.Env.getValue("debug")) {
 				if (!this._meta.fields[name]) {
 					throw new Error("No field " + name + " in model " + this._meta.name);
 				}
+			}
+			
+			var field = this._meta.fields[name];
+			var simpleType = (typeof field == "string");
+			
+			if (simpleType) {
+			
+				return this._data[name];
+			
+			} else {
 				
-				if (typeof value != this._meta.fields[name]) {
+				var entity = getEntity(field[1]);
+				return entity.query(this._store).find(this._data[name]);
+				
+			}
+		},
+		
+		set : function(name, value) {
+			var field = this._meta.fields[name];
+			var simpleType = (typeof field == "string");
+			
+			if (core.Env.getValue("debug")) {
+				if (!field) {
+					throw new Error("No field " + name + " in model " + this._meta.name);
+				}
+				
+				if (simpleType && typeof value != field) {
 					throw new Error("Value " + value + " is not of type " + this._meta.fields[name] + " in model " + this._meta.name);
+				}
+				
+				if (!simpleType) {
+					for (var i=0,ii=value.length; i<ii; i++) {
+						var val = value[i];
+						
+						if (val.getType() != field[1]) {
+							throw new Error("Value type " + val.getType() + " is not of type " + field[1] + " in model " + this._meta.name);
+						}
+					}
 				}
 				
 				if (name == "id") {
 					throw new Error("Change of ID in model " + this._meta.name + " is not allowed");
 				}
+				
+				if (name == "timestamp") {
+					throw new Error("Change of timestamp in model " + this._meta.name + " is not allowed");
+				}
 			}
 			
-			this._data[name] = value;
+			if (simpleType) {
+				this._data[name] = value;
+			} else {
+				var val;
+				
+				if (!(value instanceof Array)) {
+					val = value.id();
+				} else {
+					val = [];
+					for (var i=0,ii=value.length; i<ii; i++) {
+						val.push(value[i].id());
+					}
+				}
+				
+				this._data[name] = val;
+			}
 			
 			var dirtyProperties = this._dirtyProperties;
 			if (dirtyProperties.indexOf(name) < 0) {
 				this._dirtyProperties.push(name);
 			}
 			
-			var store = this._store;
-			for (var i = 0, ii=store.length; i<ii; i++) {
-				store.queue(this);
+			if (this._store) {
+				this._store.queue(this);
 			}
 			
 			return value;
 		},
 		
+		equals : function(entity) {
+			return (this.id() == entity.id() && this.timestamp() == entity.timestamp() && this.getType() == entity.getType());
+		},
+		
 		toJSONString : function() {
 			var el = {
 				id: this._id,
+				timestamp: this._timestamp,
 				type: this._meta.name,
 				data: this._data
 			};
 			return JSON.stringify(el);
 		}
 	};
-	
+		
 	var getEntity = function(name) {
 		var entityClass = entityClassCache[name];
 		if (entityClass) {
@@ -126,12 +192,14 @@
 			this._meta = meta;
 			var data = this._data = {};
 			this._id = config.id || createUUID();
+			this._timestamp = config.timestamp || now();
 			var dirtyProperties = this._dirtyProperties = [];
-			this._store = [];
+			this._store = null;
 			
 			var fields = meta.fields;
 			for (var key in fields) {
 				var field = fields[key];
+				
 				if (field) {
 					data[key] = config[key] || getDefaultValue(fields[key]);
 					dirtyProperties.push(key);
@@ -148,6 +216,16 @@
 		
 		clazz.query = function(store) {
 			return new rearside.Query(store, meta);
+		};
+		/*clazz.hasOne = function(property, type) {
+			meta.hasOne[property] = type;
+		};*/
+		clazz.hasMany = function(property, type) {
+			meta.fields[property] = ["list", type.getName()];
+		};
+		
+		clazz.getName = function() {
+			return name;
 		};
 		
 		return clazz;
@@ -170,6 +248,12 @@
 			
 			if (entityCache[name]) {
 				throw new Error("Model " + name + " is already created!");
+			}
+		}
+		
+		for (var key in config) {
+			if (typeof config[key] != "string") {
+				config[key] = ["object", config[key].getName()];
 			}
 		}
 		

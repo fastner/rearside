@@ -31,16 +31,23 @@
 			},
 			
 			add : function(entity) {
-				entity.addStore(this);
+				if (!entity.setStore(this)) {
+					throw new Error("You are not allowed to set more than one store");
+				}
 			},
 			
 			remove : function(entity) {
-				entity.removeStore(this);
-				this.__remove.push(entity);
+				if (entity.removeStore(this)) {
+					this.__remove.push(entity);
+				}
 			},
 			
 			get : function(id, callback) {
-				this.__storeProvider.get(id, callback);
+				var store = this;
+				this.__storeProvider.get(id, function(entity) {
+					entity.setStore(store);
+					callback(entity);
+				});
 			},
 			
 			flush : function(callback) {
@@ -70,12 +77,18 @@
 				if (todo == 0) callback();
 			},
 			
-			query : function(callback, meta, filter, limit, skip, order) {
-				this.__storeProvider.query(callback, meta, filter, limit, skip, order);
+			query : function(callback, meta, filter, idFilter, limit, skip, order) {
+				var store = this;
+				this.__storeProvider.query(function(result) {
+					for (var i=0,ii=result.length; i<ii; i++) {
+						result[i].setStore(store);
+					}
+					callback(result);
+				}, meta, filter, idFilter, limit, skip, order);
 			},
 			
-			count : function(callback, meta, filter, limit, skip, order) {
-				this.__storeProvider.count(callback, meta, filter, limit, skip, order);
+			count : function(callback, meta, filter, idFilter, limit, skip, order) {
+				this.__storeProvider.count(callback, meta, filter, idFilter, limit, skip, order);
 			}
 		}
 	});

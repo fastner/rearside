@@ -45,15 +45,16 @@
 				rearside.Model(data.type);
 				var EntityModel = rearside.Model(data.type);
 				data.data.id = data.id;
+				data.data.timestamp = data.timestamp;
 				var entity = new EntityModel(data.data);
 				callback(entity);
 			},
 			
-			count : function(callback, meta, filter, limit, skip, orders) {
-				return this.query(callback, meta, filter, limit, skip, orders).length;
+			count : function(callback, meta, filter, idFilter, limit, skip, orders) {
+				return this.query(callback, meta, filter, idFilter, limit, skip, orders).length;
 			},
 			
-			query : function(callback, meta, filter, limit, skip, orders) {
+			query : function(callback, meta, filter, idFilter, limit, skip, orders) {
 				var data = this.__data;
 				var dataSet = {};
 				var result = [];
@@ -64,10 +65,13 @@
 					var entry = JSON.parse(data[key]);
 					
 					if (meta.name == entry.type) {
-						entry.data.id = entry.id;
-						
-						if ((!filter) || filter.match(entry.data)) {
-							result.push(new EntityModel(entry.data));
+						if ((!idFilter) || (idFilter.indexOf(entry.id) >= 0)) {
+							entry.data.timestamp = entry.timestamp;
+							entry.data.id = entry.id;
+							
+							if ((!filter) || filter.match(entry.data)) {
+								result.push(new EntityModel(entry.data));
+							}
 						}
 					}
 				}

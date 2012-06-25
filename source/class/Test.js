@@ -37,11 +37,6 @@ QUnit.test("create model", function() {
 		description: "string",
 		done: "boolean"
 	});
-	
-	var Category = rearside.Model('Category', {
-		name: "string",
-		metaData: "object"
-	});
 
 	ok(!!Task, "Model created");
 	
@@ -68,7 +63,7 @@ QUnit.test("create model", function() {
 });
 
 QUnit.asyncTest("use model", function() {
-	expect(4);
+	expect(5);
 	
 	var storeProvider = new rearside.provider.Memory();
 	var store = new rearside.Store(storeProvider);
@@ -85,14 +80,9 @@ QUnit.asyncTest("use model", function() {
 	
 	store.add(myTask);
 	
-	var found = false;
-	var stores = myTask.getStores();
-	for (var i=0,ii=stores.length; i<ii; i++) {
-		if (stores[i] === store) {
-			found = true;
-		}
-	}
-	ok(found, "Store added to entity");
+	ok(myTask.equals(myTask), "Test equals function");
+	
+	ok(myTask.getStore() == store, "Store added to entity");
 	
 	store.flush(function() {
 		storeProvider.countAllEntities(function(entries) {
@@ -303,7 +293,7 @@ QUnit.asyncTest("test other modifications queries", function() {
 		
 		Task.query(store).order("count", "desc").one(function(r) {
 			
-			equal(r.length, 1, "Query one results");
+			ok(r != null, "Query one results");
 			start();
 			
 		});
@@ -311,3 +301,72 @@ QUnit.asyncTest("test other modifications queries", function() {
 	});
 });
 
+QUnit.asyncTest("test has one and has many", function() {
+	expect(4);
+	
+	var storeProvider = new rearside.provider.Memory();
+	var store = new rearside.Store(storeProvider);
+
+	var User = rearside.Model('User', {
+		name: "string"
+	});
+
+	var Task = rearside.Model('Task6', {
+		name: "string",
+		owner: User
+	});
+	
+	var Category = rearside.Model('Category6', {
+		name: "string"
+	});
+	
+	Category.hasMany("tasks", Task);
+	
+	var user1 = new User({
+		name: "Testuser"
+	});
+	var task0 = new Task({
+		name: "My task 0"
+	});
+	var task1 = new Task({
+		name: "My task 1"
+	});
+	var task2 = new Task({
+		name: "My task 2"
+	});
+	var cat1 = new Category({
+		name: "Testcategory"
+	});
+	
+	
+	store.add(user1);
+	store.add(task0);
+	store.add(task1);
+	store.add(task2);
+	store.add(cat1);
+	
+	cat1.set("tasks", [task1, task2]);
+	task0.set("owner", user1);
+	
+	store.flush(function() {
+		
+		var tasks = cat1.get("tasks");
+		//ok((tasks[0] === task1.id() && tasks[1] === task2.id()) || (tasks[0] === task2.id() && tasks[1] === task1.id()), "Not fetched tasks are equals to task entity ids");
+		ok(tasks instanceof rearside.Query, "One to many returns query collection");
+		
+		tasks.list(function(result) {
+			ok (result.length == 2, "2 results found");
+			ok( (result[0].equals(task1) && result[1].equals(task2)) || (result[0].equals(task2) && result[1].equals(task1)), "Check if loaded entities equals saved ones");
+			start();
+		});
+		
+		Task.query(store).find([task0.id()]).one(function(entity) {
+			
+			entity.get("owner").one(function(entity) {
+				ok(entity.equals(user1), "Owner equals original set owner");
+			});
+			
+		});
+		
+	});
+});
