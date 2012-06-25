@@ -49,8 +49,13 @@
 				callback(entity);
 			},
 			
-			query : function(callback, meta, filter, limit) {
+			count : function(callback, meta, filter, limit, skip, orders) {
+				return this.query(callback, meta, filter, limit, skip, orders).length;
+			},
+			
+			query : function(callback, meta, filter, limit, skip, orders) {
 				var data = this.__data;
+				var dataSet = {};
 				var result = [];
 				
 				var EntityModel = rearside.Model(meta.name);
@@ -63,12 +68,33 @@
 						
 						if ((!filter) || filter.match(entry.data)) {
 							result.push(new EntityModel(entry.data));
-							console.log(result.length, limit);
-							if (result.length >= limit) {
-								break;
-							}
 						}
 					}
+				}
+				
+				if (orders && orders.length > 0) {
+					var resultOrder = function(a,b) {
+						for (var i=0,ii=orders.length; i<ii; i++) {
+							var order = orders[i];
+							
+							var val;
+							if (order.order != "desc") {
+								val = a.get(order.property) - b.get(order.property);
+							} else {
+								val = b.get(order.property) - a.get(order.property);
+							}
+							if (val != 0) {
+								return val;
+							}
+						}
+						
+						return 0;
+					};
+					result = result.sort(resultOrder);
+				}
+				
+				if (limit) {
+					result = result.slice(skip, skip+limit);
 				}
 				
 				callback(result);

@@ -252,7 +252,7 @@ QUnit.asyncTest("test and/or queries", function() {
 
 
 QUnit.asyncTest("test other modifications queries", function() {
-	expect(1);
+	expect(7);
 	
 	var storeProvider = new rearside.provider.Memory();
 	var store = new rearside.Store(storeProvider);
@@ -274,9 +274,36 @@ QUnit.asyncTest("test other modifications queries", function() {
 	
 	store.flush(function() {
 		
-		Task.query(store).limit(5).list(function(results) {
+		Task.query(store).order("count").limit(5).list(function(r) {
 			
-			equal(results.length, 5, "Query 5 results");
+			equal(r.length, 5, "Query 5 results");
+			ok(r[0].get("count") === 0 && r[1].get("count") == 1 && r[2].get("count") == 2 && r[3].get("count") == 3 && r[4].get("count") == 4, "Right order");
+			
+			start();
+			
+		});
+		
+		Task.query(store).order("count", "desc").limit(5).list(function(r) {
+			
+			equal(r.length, 5, "Query 5 results");
+			ok(r[0].get("count") === 14 && r[1].get("count") == 13 && r[2].get("count") == 12 && r[3].get("count") == 11 && r[4].get("count") == 10, "Right order desc");
+			
+			start();
+			
+		});
+		
+		Task.query(store).order("count").limit(5).skip(5).list(function(r) {
+			
+			equal(r.length, 5, "Query 5 results");
+			ok(r[0].get("count") === 5 && r[1].get("count") == 6 && r[2].get("count") == 7 && r[3].get("count") == 8 && r[4].get("count") == 9, "Right order with skip");
+			
+			start();
+			
+		});
+		
+		Task.query(store).order("count", "desc").one(function(r) {
+			
+			equal(r.length, 1, "Query one results");
 			start();
 			
 		});
