@@ -8,7 +8,7 @@
 		members : {
 			__data : null,
 			
-			countAllEntities : function(callback) {
+			countAllEntities : function(tx, callback) {
 				var count = 0;
 				
 				for (var key in this.__data) {

@@ -62,7 +62,8 @@ QUnit.test("create model", function() {
 	//ok(myNextTask.getStore() == store, "Check if store is set");
 });
 
-QUnit.asyncTest("use model", function() {
+
+QUnit.asyncTest("use model with transaction", function() {
 	expect(5);
 	
 	var storeProvider = new rearside.provider.Memory();
@@ -84,22 +85,27 @@ QUnit.asyncTest("use model", function() {
 	
 	ok(myTask.getStore() == store, "Store added to entity");
 	
-	store.flush(function() {
-		storeProvider.countAllEntities(function(entries) {
-			ok(entries == 1, "One entity in store provider");
-			store.get(myTask.id(), function(loadedEntity) {
-				ok (loadedEntity.get("name") == myTask.get("name"), "Loaded entity has same name property");
-				store.remove(loadedEntity);
-				store.flush(function() {
-					storeProvider.countAllEntities(function(entries) {
-						ok(entries == 0, "Remove entity from store provider");
-						start();
+	store.transaction(function(tx) {
+	
+		store.flush(tx, function() {
+			storeProvider.countAllEntities(tx, function(entries) {
+				ok(entries == 1, "One entity in store provider");
+				store.get(tx, myTask.id(), function(loadedEntity) {
+					ok (loadedEntity.get("name") == myTask.get("name"), "Loaded entity has same name property");
+					store.remove(loadedEntity);
+					store.flush(tx, function() {
+						storeProvider.countAllEntities(tx, function(entries) {
+							ok(entries == 0, "Remove entity from store provider");
+							start();
+						});
 					});
 				});
 			});
+		
 		});
 	
 	});
+	
 });
 
 
@@ -124,71 +130,73 @@ QUnit.asyncTest("test simple queries", function() {
 	
 	store.add(myTask);
 	
-	store.flush(function() {
-		
-		Task.query(store).filter("name", "contains", "test").list(function(results) {
+	store.transaction(function(tx) {
+		store.flush(tx, function() {
 			
-			ok(results.length == 1, "Found 'contains' entry");
-			start();
+			Task.query(store).filter("name", "contains", "test").list(function(results) {
+				
+				ok(results.length == 1, "Found 'contains' entry");
+				start();
+				
+			});
+			
+			Task.query(store).filter("name", "contains not", "abc").list(function(results) {
+				
+				ok(results.length == 1, "Found 'contains not' entry");
+				start();
+				
+			});
+			
+			Task.query(store).filter("name", "=", "My test").list(function(results) {
+				
+				ok(results.length == 1, "Found '=' entry");
+				start();
+				
+			});
+			
+			Task.query(store).filter("name", "!=", "abc").list(function(results) {
+				
+				ok(results.length == 1, "Found '!=' entry");
+				start();
+				
+			});
+			
+			Task.query(store).filter("count", "<", 50).list(function(results) {
+				
+				ok(results.length == 1, "Found '<' entry");
+				start();
+				
+			});
+			
+			Task.query(store).filter("count", ">", 2).list(function(results) {
+				
+				ok(results.length == 1, "Found '>' entry");
+				start();
+				
+			});
+			
+			Task.query(store).filter("count", "<=", 25).list(function(results) {
+				
+				ok(results.length == 1, "Found '<=' entry");
+				start();
+				
+			});
+			
+			Task.query(store).filter("count", ">=", 25).list(function(results) {
+				
+				ok(results.length == 1, "Found '>=' entry");
+				start();
+				
+			});
+			
+			Task.query(store).filter("name", "contains", "test").filter("count", ">=", 25).list(function(results) {
+				
+				ok(results.length == 1, "Found 'contains' and '>=' entry");
+				start();
+				
+			});
 			
 		});
-		
-		Task.query(store).filter("name", "contains not", "abc").list(function(results) {
-			
-			ok(results.length == 1, "Found 'contains not' entry");
-			start();
-			
-		});
-		
-		Task.query(store).filter("name", "=", "My test").list(function(results) {
-			
-			ok(results.length == 1, "Found '=' entry");
-			start();
-			
-		});
-		
-		Task.query(store).filter("name", "!=", "abc").list(function(results) {
-			
-			ok(results.length == 1, "Found '!=' entry");
-			start();
-			
-		});
-		
-		Task.query(store).filter("count", "<", 50).list(function(results) {
-			
-			ok(results.length == 1, "Found '<' entry");
-			start();
-			
-		});
-		
-		Task.query(store).filter("count", ">", 2).list(function(results) {
-			
-			ok(results.length == 1, "Found '>' entry");
-			start();
-			
-		});
-		
-		Task.query(store).filter("count", "<=", 25).list(function(results) {
-			
-			ok(results.length == 1, "Found '<=' entry");
-			start();
-			
-		});
-		
-		Task.query(store).filter("count", ">=", 25).list(function(results) {
-			
-			ok(results.length == 1, "Found '>=' entry");
-			start();
-			
-		});
-		
-		Task.query(store).filter("name", "contains", "test").filter("count", ">=", 25).list(function(results) {
-			
-			ok(results.length == 1, "Found 'contains' and '>=' entry");
-			start();
-			
-		});
-		
 	});
 });
 
@@ -213,30 +221,33 @@ QUnit.asyncTest("test and/or queries", function() {
 	
 	store.add(myTask);
 	
-	store.flush(function() {
-		
-		var f1 = new rearside.filter.PropertyFilter("count", "=", 25);
-		Task.query(store).filter("name", "contains", "test").and(f1).list(function(results) {
+	store.transaction(function(tx) {
+	
+		store.flush(tx, function() {
 			
-			ok(results.length == 1, "true and true");
-			start();
+			var f1 = new rearside.filter.PropertyFilter("count", "=", 25);
+			Task.query(store).filter("name", "contains", "test").and(f1).list(function(results) {
+				
+				ok(results.length == 1, "true and true");
+				start();
+				
+			});
+			
+			Task.query(store).filter("name", "contains", "abc").and(f1).list(function(results) {
+				
+				ok(results.length == 0, "false and true");
+				start();
+				
+			});
+			
+			Task.query(store).filter("name", "contains", "abc").or(f1).list(function(results) {
+				
+				ok(results.length == 1, "false or true");
+				start();
+				
+			});
 			
 		});
-		
-		Task.query(store).filter("name", "contains", "abc").and(f1).list(function(results) {
-			
-			ok(results.length == 0, "false and true");
-			start();
-			
-		});
-		
-		Task.query(store).filter("name", "contains", "abc").or(f1).list(function(results) {
-			
-			ok(results.length == 1, "false or true");
-			start();
-			
-		});
-		
 	});
 });
 
@@ -262,39 +273,43 @@ QUnit.asyncTest("test other modifications queries", function() {
 		store.add(myTask);
 	}
 	
-	store.flush(function() {
-		
-		Task.query(store).order("count").limit(5).list(function(r) {
+	store.transaction(function(tx) {
+	
+		store.flush(tx, function() {
 			
-			equal(r.length, 5, "Query 5 results");
-			ok(r[0].get("count") === 0 && r[1].get("count") == 1 && r[2].get("count") == 2 && r[3].get("count") == 3 && r[4].get("count") == 4, "Right order");
+			Task.query(store).order("count").limit(5).list(function(r) {
+				
+				equal(r.length, 5, "Query 5 results");
+				ok(r[0].get("count") === 0 && r[1].get("count") == 1 && r[2].get("count") == 2 && r[3].get("count") == 3 && r[4].get("count") == 4, "Right order");
+				
+				start();
+				
+			});
 			
-			start();
+			Task.query(store).order("count", "desc").limit(5).list(function(r) {
+				
+				equal(r.length, 5, "Query 5 results");
+				ok(r[0].get("count") === 14 && r[1].get("count") == 13 && r[2].get("count") == 12 && r[3].get("count") == 11 && r[4].get("count") == 10, "Right order desc");
+				
+				start();
+				
+			});
 			
-		});
-		
-		Task.query(store).order("count", "desc").limit(5).list(function(r) {
+			Task.query(store).order("count").limit(5).skip(5).list(function(r) {
+				
+				equal(r.length, 5, "Query 5 results");
+				ok(r[0].get("count") === 5 && r[1].get("count") == 6 && r[2].get("count") == 7 && r[3].get("count") == 8 && r[4].get("count") == 9, "Right order with skip");
+				
+				start();
+				
+			});
 			
-			equal(r.length, 5, "Query 5 results");
-			ok(r[0].get("count") === 14 && r[1].get("count") == 13 && r[2].get("count") == 12 && r[3].get("count") == 11 && r[4].get("count") == 10, "Right order desc");
-			
-			start();
-			
-		});
-		
-		Task.query(store).order("count").limit(5).skip(5).list(function(r) {
-			
-			equal(r.length, 5, "Query 5 results");
-			ok(r[0].get("count") === 5 && r[1].get("count") == 6 && r[2].get("count") == 7 && r[3].get("count") == 8 && r[4].get("count") == 9, "Right order with skip");
-			
-			start();
-			
-		});
-		
-		Task.query(store).order("count", "desc").one(function(r) {
-			
-			ok(r != null, "Query one results");
-			start();
+			Task.query(store).order("count", "desc").one(function(r) {
+				
+				ok(r != null, "Query one results");
+				start();
+				
+			});
 			
 		});
 		
@@ -348,22 +363,26 @@ QUnit.asyncTest("test has one and has many", function() {
 	cat1.set("tasks", [task1, task2]);
 	task0.set("owner", user1);
 	
-	store.flush(function() {
-		
-		var tasks = cat1.get("tasks");
-		//ok((tasks[0] === task1.id() && tasks[1] === task2.id()) || (tasks[0] === task2.id() && tasks[1] === task1.id()), "Not fetched tasks are equals to task entity ids");
-		ok(tasks instanceof rearside.Query, "One to many returns query collection");
-		
-		tasks.list(function(result) {
-			ok (result.length == 2, "2 results found");
-			ok( (result[0].equals(task1) && result[1].equals(task2)) || (result[0].equals(task2) && result[1].equals(task1)), "Check if loaded entities equals saved ones");
-			start();
-		});
-		
-		Task.query(store).find([task0.id()]).one(function(entity) {
+	store.transaction(function(tx) {
+	
+		store.flush(tx, function() {
 			
-			entity.get("owner").one(function(entity) {
-				ok(entity.equals(user1), "Owner equals original set owner");
+			var tasks = cat1.get("tasks");
+			//ok((tasks[0] === task1.id() && tasks[1] === task2.id()) || (tasks[0] === task2.id() && tasks[1] === task1.id()), "Not fetched tasks are equals to task entity ids");
+			ok(tasks instanceof rearside.Query, "One to many returns query collection");
+			
+			tasks.list(function(result) {
+				ok (result.length == 2, "2 results found");
+				ok( (result[0].equals(task1) && result[1].equals(task2)) || (result[0].equals(task2) && result[1].equals(task1)), "Check if loaded entities equals saved ones");
+				start();
+			});
+			
+			Task.query(store).find([task0.id()]).one(function(entity) {
+				
+				entity.get("owner").one(function(entity) {
+					ok(entity.equals(user1), "Owner equals original set owner");
+				});
+				
 			});
 			
 		});

@@ -22,6 +22,10 @@
 				return this.__storeProvider;
 			},
 			
+			transaction : function(callback) {
+				callback();
+			},
+			
 			queue : function(entity) {
 				this.__dirty.push(entity);
 			},
@@ -42,7 +46,7 @@
 				}
 			},
 			
-			get : function(id, callback) {
+			get : function(tx, id, callback) {
 				var store = this;
 				this.__storeProvider.get(id, function(entity) {
 					entity.setStore(store);
@@ -50,7 +54,7 @@
 				});
 			},
 			
-			flush : function(callback) {
+			flush : function(tx, callback) {
 				var todo = 1;
 				
 				var cb = function() {
