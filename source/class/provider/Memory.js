@@ -8,6 +8,18 @@
 		members : {
 			__data : null,
 			
+			transaction : function(callback) {
+				callback(new rearside.Transaction(this));
+			},
+			
+			commit : function(callback) {
+				callback();
+			},
+			
+			rollback : function(callback) {
+				callback();
+			},
+			
 			countAllEntities : function(tx, callback) {
 				var count = 0;
 				

@@ -23,7 +23,7 @@
 			},
 			
 			transaction : function(callback) {
-				callback();
+				this.__storeProvider.transaction(callback);
 			},
 			
 			queue : function(entity) {
