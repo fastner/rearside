@@ -70,7 +70,9 @@
 			get : function(tx, id, callback) {
 				var store = this;
 				this.__storeProvider.get(id, function(entity) {
-					entity.setStore(store);
+					if (entity) {
+						entity.setStore(store);
+					}
 					callback(entity);
 				});
 			},

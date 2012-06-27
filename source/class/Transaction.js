@@ -38,10 +38,10 @@
 			__nativeTransaction : null,
 			
 			commit : function(callback) {
-				this.__storeProvider.commit(callback, this.__nativeTransaction);
+				this.__storeProvider.commit(this.__nativeTransaction, callback);
 			},
 			rollback : function(callback) {
-				this.__storeProvider.rollback(callback, this.__nativeTransaction);
+				this.__storeProvider.rollback(this.__nativeTransaction, callback);
 			}
 		}
 	});

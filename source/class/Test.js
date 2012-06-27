@@ -410,3 +410,50 @@ QUnit.asyncTest("test has one and has many", function() {
 		
 	});
 });
+
+
+
+
+QUnit.asyncTest("permanent local storage", function() {
+	expect(2);
+	
+	var store = new rearside.Store(new rearside.provider.LocalStorage("test1"));
+	var store2 = new rearside.Store(new rearside.provider.LocalStorage("test2"));
+
+	var Task7 = rearside.Model('Task7', {
+		name: "string",
+		count: "number"
+	});
+	
+	var myTask = new Task7({
+		name: "Storage test",
+		count: 4
+	});
+	
+	store.add(myTask);
+	
+	store.transaction(function(tx) {
+	
+		store.flush(tx, function() {
+			
+			store.transaction(function(tx2) {
+				
+				store.get(tx2, myTask.id(), function(loadedEntity) {
+					ok (myTask.equals(loadedEntity), "Loaded entity is equal");
+					start();
+				});
+				
+			});
+			
+			store2.transaction(function(tx2) {
+				store2.get(tx2, myTask.id(), function(loadedEntity) {
+					ok (!myTask.equals(loadedEntity), "Entity not in other store");
+					start();
+				});
+			});
+		
+		});
+	
+	});
+	
+});

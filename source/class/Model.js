@@ -187,6 +187,9 @@
 		},
 		
 		equals : function(entity) {
+			if (!entity) {
+				return false;
+			}
 			return (this.id() == entity.id() && this.timestamp() == entity.timestamp() && this.getType() == entity.getType());
 		},
 		

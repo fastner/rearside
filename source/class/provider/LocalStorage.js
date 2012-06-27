@@ -19,15 +19,29 @@
  * =============================================================================
  */
  
-(function() {
+(function(localStorage) {
 	
-	core.Class("rearside.provider.Memory", {
-		construct : function() {
-			this.__data = {};
+	core.Class("rearside.provider.LocalStorage", {
+		construct : function(namespace) {
+			if (core.Env.getValue("debug")) {
+				if (!localStorage) {
+					throw new Error("No local storage available");
+				}
+				if (!namespace) {
+					throw new Error("LocalStorage provider needs namespace");
+				}
+			}
+			this.__namespace = namespace;
+			var index = this.__index = JSON.parse(localStorage.getItem(namespace));
+			if (!index) {
+				this.__index = [];
+				localStorage.setItem(namespace, "[]");
+			}
 		},
 		
 		members : {
-			__data : null,
+			__namespace : null,
+			__index : null,
 			
 			transaction : function(callback) {
 				callback(new rearside.Transaction(this, null));
@@ -42,33 +56,50 @@
 			},
 			
 			countAllEntities : function(tx, callback) {
-				var count = 0;
-				
-				for (var key in this.__data) {
-					if (this.__data.hasOwnProperty(key)) {
-						count++;
-					}
-				}
-				
-				callback(count);
+				callback(this.__index.length);
 			},
 			
 			update : function(entity, callback) {
 				var id = entity.id();
+				var index = this.__index;
+				var namespace = this.__namespace;
 				
-				this.__data[id] = entity.toJSONString();
+				localStorage.setItem(namespace + "/" + id, entity.toJSONString());
+				
+				if (index.indexOf(id) < 0) {
+					index.push(id);
+					localStorage.setItem(namespace, JSON.stringify(index));
+				}
+				
 				callback(id);
 			},
 			
 			remove : function(entity, callback) {
 				var id = entity.id();
+				var index = this.__index;
+				var namespace = this.__namespace;
 				
-				delete this.__data[id];
+				var pos = index.indexOf(id);
+				if (pos >= 0) {
+					index.splice(pos, 1);
+					localStorage.setItem(namespace, JSON.stringify(index));
+					
+					localStorage.removeItem(namespace + "/" + id);
+				}
+				
 				callback(id);
 			},
 			
 			get : function(id, callback) {
-				var data = JSON.parse(this.__data[id]);
+				var index = this.__index;
+				var namespace = this.__namespace;
+				
+				if (index.indexOf(id) < 0) {
+					callback(false);
+					return;
+				}
+				
+				var data = JSON.parse(localStorage.getItem(namespace + "/" + id));
 				
 				if (!data) {
 					callback(false);
@@ -88,14 +119,15 @@
 			},
 			
 			query : function(callback, meta, filter, idFilter, limit, skip, orders) {
-				var data = this.__data;
-				var dataSet = {};
+				var index = this.__index;
+				var namespace = this.__namespace;
 				var result = [];
 				
 				var EntityModel = rearside.Model(meta.name);
 				
-				for (var key in data) {
-					var entry = JSON.parse(data[key]);
+				for (var i=0,ii=index.length; i<ii; i++) {
+					var id = index[i];
+					var entry = JSON.parse(localStorage.getItem(namespace + "/" + id));
 					
 					if (meta.name == entry.type) {
 						if ((!idFilter) || (idFilter.indexOf(entry.id) >= 0)) {
@@ -139,4 +171,4 @@
 		}
 	});
 	
-})();
+})(window.localStorage);
