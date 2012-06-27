@@ -39,6 +39,10 @@
 			__remove : null,
 			__storeProvider : null,
 			
+			checkUpdates : function(callback) {
+				this.__storeProvider.checkUpdates(callback);
+			},
+			
 			getStoreProvider : function() {
 				return this.__storeProvider;
 			},

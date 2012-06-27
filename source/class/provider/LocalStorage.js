@@ -22,7 +22,7 @@
 (function(localStorage) {
 	
 	core.Class("rearside.provider.LocalStorage", {
-		construct : function(namespace) {
+		construct : function(namespace, version) {
 			if (core.Env.getValue("debug")) {
 				if (!localStorage) {
 					throw new Error("No local storage available");
@@ -32,16 +32,38 @@
 				}
 			}
 			this.__namespace = namespace;
+			version = JSON.stringify(version);
 			var index = this.__index = JSON.parse(localStorage.getItem(namespace));
 			if (!index) {
 				this.__index = [];
 				localStorage.setItem(namespace, "[]");
+				localStorage.setItem(namespace + "/version", JSON.stringify(version));
+			} else {
+				var oldVersion = localStorage.getItem(namespace + "/version");
+				if (oldVersion != version) {
+					this.__needUpdate = [JSON.parse(oldVersion), JSON.parse(version)];
+				}
 			}
 		},
 		
 		members : {
 			__namespace : null,
 			__index : null,
+			__needUpdate : false,
+			
+			checkUpdates : function(callback) {
+				if (this.__needUpdate !== false) {
+					var v = this.__needUpdate;
+					localStorage.setItem(this.__namespace + "/version", JSON.stringify(v[1]));
+					if (callback) {
+						callback(true, v[1], v[0]);
+					}
+				} else {
+					if (callback) {
+						callback(false);
+					}
+				}
+			},
 			
 			transaction : function(callback) {
 				callback(new rearside.Transaction(this, null));

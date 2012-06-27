@@ -29,6 +29,10 @@
 		members : {
 			__data : null,
 			
+			checkUpdates : function(callback) {
+				callback(false);
+			},
+			
 			transaction : function(callback) {
 				callback(new rearside.Transaction(this, null));
 			},

@@ -457,3 +457,25 @@ QUnit.asyncTest("permanent local storage", function() {
 	});
 	
 });
+
+
+
+QUnit.asyncTest("version update", function() {
+	expect(2);
+	
+	var store = new rearside.Store(new rearside.provider.LocalStorage("test3", 1));
+	store.checkUpdates();
+	
+	store = new rearside.Store(new rearside.provider.LocalStorage("test3",1 ));
+	store.checkUpdates(function(needUpdate) {
+		ok(!needUpdate, "No updates needed");
+		start();
+	});
+	
+	store = new rearside.Store(new rearside.provider.LocalStorage("test3", 2));
+	store.checkUpdates(function(needUpdate) {
+		ok(needUpdate, "Updates needed due to new version number");
+		start();
+	});
+	
+});
