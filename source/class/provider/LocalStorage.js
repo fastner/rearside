@@ -64,7 +64,7 @@
 				var index = this.__index;
 				var namespace = this.__namespace;
 				
-				localStorage.setItem(namespace + "/" + id, entity.toJSONString());
+				localStorage.setItem(namespace + "/d/" + id, entity.toJSONString());
 				
 				if (index.indexOf(id) < 0) {
 					index.push(id);
@@ -84,7 +84,7 @@
 					index.splice(pos, 1);
 					localStorage.setItem(namespace, JSON.stringify(index));
 					
-					localStorage.removeItem(namespace + "/" + id);
+					localStorage.removeItem(namespace + "/d/" + id);
 				}
 				
 				callback(id);
@@ -99,7 +99,7 @@
 					return;
 				}
 				
-				var data = JSON.parse(localStorage.getItem(namespace + "/" + id));
+				var data = JSON.parse(localStorage.getItem(namespace + "/d/" + id));
 				
 				if (!data) {
 					callback(false);
@@ -127,7 +127,7 @@
 				
 				for (var i=0,ii=index.length; i<ii; i++) {
 					var id = index[i];
-					var entry = JSON.parse(localStorage.getItem(namespace + "/" + id));
+					var entry = JSON.parse(localStorage.getItem(namespace + "/d/" + id));
 					
 					if (meta.name == entry.type) {
 						if ((!idFilter) || (idFilter.indexOf(entry.id) >= 0)) {
