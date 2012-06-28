@@ -34,7 +34,7 @@
 			this.__namespace = namespace;
 			version = JSON.stringify(version);
 			var nmsp = localStorage.getItem(namespace);
-			var index = this.__index = (nmsp === null) null : JSON.parse(nmsp);
+			var index = this.__index = (nmsp === null) ? null : JSON.parse(nmsp);
 			if (!index) {
 				this.__index = [];
 				localStorage.setItem(namespace, "[]");
