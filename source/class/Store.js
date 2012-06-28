@@ -77,7 +77,7 @@
 					if (entity) {
 						entity.setStore(store);
 					}
-					callback(entity);
+					callback && callback(entity);
 				});
 			},
 			
@@ -87,7 +87,9 @@
 				var cb = function() {
 					todo--;
 					
-					if (todo == 0) callback();
+					if (callback && todo == 0) {
+						callback();
+					}
 				};
 				
 				var entity = this.__dirty.pop();
@@ -105,7 +107,9 @@
 				}
 				
 				todo--;
-				if (todo == 0) callback();
+				if (callback && todo == 0) {
+					callback();
+				}
 			},
 			
 			query : function(callback, meta, filter, idFilter, limit, skip, order) {
@@ -114,7 +118,7 @@
 					for (var i=0,ii=result.length; i<ii; i++) {
 						result[i].setStore(store);
 					}
-					callback(result);
+					callback && callback(result);
 				}, meta, filter, idFilter, limit, skip, order);
 			},
 			
