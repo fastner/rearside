@@ -34,7 +34,7 @@
 			this.__namespace = namespace;
 			version = JSON.stringify(version);
 			var nmsp = localStorage.getItem(namespace);
-			var index = this.__index = (nmsp === null) ? null : JSON.parse(nmsp);
+			var index = this.__index = (nmsp == null) ? null : JSON.parse(nmsp);
 			if (!index) {
 				this.__index = [];
 				localStorage.setItem(namespace, "[]");
@@ -42,8 +42,8 @@
 			} else {
 				var oldVersion = localStorage.getItem(namespace + "/version");
 				if (oldVersion != version) {
-					oldVersion = oldVersion === null ? null : JSON.parse(oldVersion);
-					version = (version === null) ? null : JSON.parse(version);
+					oldVersion = (oldVersion == null) ? null : JSON.parse(oldVersion);
+					version = (version == null) ? null : JSON.parse(version);
 					this.__needUpdate = [oldVersion, version];
 				}
 			}
@@ -125,7 +125,7 @@
 				}
 				
 				var item = localStorage.getItem(namespace + "/d/" + id);
-				var data = (item === null) ? null : JSON.parse(item);
+				var data = (item == null) ? null : JSON.parse(item);
 				
 				if (!data) {
 					callback(false);
@@ -154,7 +154,7 @@
 				for (var i=0,ii=index.length; i<ii; i++) {
 					var id = index[i];
 					var item = localStorage.getItem(namespace + "/d/" + id);
-					var entry = (item === null) ? null : JSON.parse(item);
+					var entry = (item == null) ? null : JSON.parse(item);
 					
 					if (meta.name == entry.type) {
 						if ((!idFilter) || (idFilter.indexOf(entry.id) >= 0)) {
