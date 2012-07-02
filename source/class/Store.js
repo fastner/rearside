@@ -92,18 +92,18 @@
 					}
 				};
 				
-				var entity = this.__dirty.pop();
+				var entity = this.__dirty.shift();
 				while (entity) {
 					todo++;
 					this.__storeProvider.update(entity, cb)
-					entity = this.__dirty.pop();
+					entity = this.__dirty.shift();
 				}
 				
-				entity = this.__remove.pop();
+				entity = this.__remove.shift();
 				while (entity) {
 					todo++;
 					this.__storeProvider.remove(entity, cb);
-					entity = this.__dirty.pop();
+					entity = this.__dirty.shift();
 				}
 				
 				todo--;
