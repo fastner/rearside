@@ -71,6 +71,11 @@
 				callback(id);
 			},
 			
+			purge : function(tx, callback) {
+				this.__data = {};
+				callback();
+			},
+			
 			get : function(id, callback) {
 				var data = JSON.parse(this.__data[id]);
 				

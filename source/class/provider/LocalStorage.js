@@ -115,6 +115,21 @@
 				callback(id);
 			},
 			
+			purge : function(tx, callback) {
+				var index = this.__index;
+				var namespace = this.__namespace;
+				
+				var id = index.pop();
+				while (id) {
+					localStorage.removeItem(namespace + "/d/" + id);
+					
+					id = index.pop();
+				}
+				
+				localStorage.setItem(namespace, "[]");
+				callback();
+			},
+			
 			get : function(id, callback) {
 				var index = this.__index;
 				var namespace = this.__namespace;

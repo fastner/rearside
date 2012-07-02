@@ -112,6 +112,10 @@
 				}
 			},
 			
+			purge : function(tx, callback) {
+				this.__storeProvider.purge(tx, callback);
+			},
+			
 			query : function(callback, meta, filter, idFilter, limit, skip, order) {
 				var store = this;
 				this.__storeProvider.query(function(result) {
