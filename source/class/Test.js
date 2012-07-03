@@ -479,3 +479,63 @@ QUnit.asyncTest("version update", function() {
 	});
 	
 });
+
+
+QUnit.asyncTest("purge local storage", function() {
+	expect(3);
+	
+	var store = new rearside.Store(new rearside.provider.LocalStorage("test4"));
+	var store2 = new rearside.Store(new rearside.provider.LocalStorage("test5"));
+
+	var Task = rearside.Model('Task8', {
+		name: "string"
+	});
+	
+	var myTask = new Task({
+		name: "Storage test 1"
+	});
+	store.add(myTask);
+	
+	var myTask2 = new Task({
+		name: "Storage test 2"
+	});
+	store2.add(myTask2);
+	
+	store.transaction(function(tx) {
+	
+		store.flush(tx, function() {
+			
+			store2.transaction(function(tx2) {
+				
+				store2.flush(tx2, function() {
+			
+					store.get(tx, myTask.id(), function(loadedEntity) {
+			
+						ok (myTask.equals(loadedEntity), "Loaded entity is equal");
+						
+						store.purge(tx, function() {
+				
+							store.get(tx, myTask.id(), function(loadedEntity) {
+								ok (!loadedEntity, "Store 1 purged");
+								start();
+							});
+							
+							store2.get(tx2, myTask2.id(), function(loadedEntity) {
+								ok (myTask2.equals(loadedEntity), "Entity2 still in store");
+								start();
+							});
+						
+						});
+					
+					});
+				
+				});
+			
+			});
+			
+		
+		});
+	
+	});
+	
+});
