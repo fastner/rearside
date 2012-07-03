@@ -21,28 +21,69 @@
  
 (function() {
 	
+	var dataStore = {};
+	var dsVersion = {};
+	
 	core.Class("rearside.provider.Memory", {
-		construct : function() {
-			this.__data = {};
+		construct : function(namespace, version) {
+			if (core.Env.getValue("debug")) {
+				if (!namespace) {
+					throw new Error("Memory provider needs namespace");
+				}
+			}
+			
+			var ds = dataStore[namespace];
+			if (!ds) {
+				ds = dataStore[namespace] = {};
+			}
+			this.__data = ds;
+			
+			this.__namespace = namespace;
+			
+			var oldVersion = dsVersion[namespace];
+			if (oldVersion != version) {
+				dsVersion[namespace] = version;
+				this.__needUpdate = [oldVersion, version];
+			}
 		},
 		
 		members : {
 			__data : null,
+			__namespace : null,
+			__needUpdate : false,
+			
+			__jsonParse : function(data) {
+				if (data == null) {
+					return data;
+				}
+				
+				return JSON.parse(data);
+			},
 			
 			checkUpdates : function(callback) {
-				callback(false);
+				if (this.__needUpdate !== false) {
+					var v = this.__needUpdate;
+					dsVersion[this.__namespace] = v[1];
+					if (callback) {
+						callback(true, v[1], v[0]);
+					}
+				} else {
+					if (callback) {
+						callback(false);
+					}
+				}
 			},
 			
 			transaction : function(callback) {
-				callback(new rearside.Transaction(this, null));
+				if (callback) callback(new rearside.Transaction(this, null));
 			},
 			
 			commit : function(tx, callback) {
-				callback();
+				if (callback) callback();
 			},
 			
 			rollback : function(tx, callback) {
-				callback();
+				if (callback) callback();
 			},
 			
 			countAllEntities : function(tx, callback) {
@@ -54,33 +95,33 @@
 					}
 				}
 				
-				callback(count);
+				if (callback) callback(count);
 			},
 			
 			update : function(entity, callback) {
 				var id = entity.id();
 				
 				this.__data[id] = entity.toJSONString();
-				callback(id);
+				if (callback) callback(id);
 			},
 			
 			remove : function(entity, callback) {
 				var id = entity.id();
 				
 				delete this.__data[id];
-				callback(id);
+				if (callback) callback(id);
 			},
 			
 			purge : function(tx, callback) {
 				this.__data = {};
-				callback();
+				if (callback) callback();
 			},
 			
 			get : function(id, callback) {
-				var data = JSON.parse(this.__data[id]);
+				var data = this.__jsonParse(this.__data[id]);
 				
 				if (!data) {
-					callback(false);
+					if (callback) callback(false);
 					return;
 				}
 				
@@ -89,7 +130,7 @@
 				data.data.id = data.id;
 				data.data.timestamp = data.timestamp;
 				var entity = new EntityModel(data.data);
-				callback(entity);
+				if (callback) callback(entity);
 			},
 			
 			count : function(callback, meta, filter, idFilter, limit, skip, orders) {
@@ -104,7 +145,7 @@
 				var EntityModel = rearside.Model(meta.name);
 				
 				for (var key in data) {
-					var entry = JSON.parse(data[key]);
+					var entry = this.__jsonParse(data[key]);
 					
 					if (meta.name == entry.type) {
 						if ((!idFilter) || (idFilter.indexOf(entry.id) >= 0)) {
@@ -143,7 +184,7 @@
 					result = result.slice(skip, skip+limit);
 				}
 				
-				callback(result);
+				if (callback) callback(result);
 			}
 		}
 	});
