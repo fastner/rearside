@@ -32,7 +32,7 @@
 				}
 			}
 			this.__namespace = namespace;
-			version = JSON.stringify(version);
+			version = version ? JSON.stringify(version) : 0;
 			var nmsp = localStorage.getItem(namespace);
 			var index = this.__index = (nmsp == null) ? null : JSON.parse(nmsp);
 			if (!index) {
@@ -41,9 +41,12 @@
 				localStorage.setItem(namespace + "/version", JSON.stringify(version));
 			} else {
 				var oldVersion = localStorage.getItem(namespace + "/version");
+				if (oldVersion === "undefined") {
+					oldVersion = null;
+				}
+				oldVersion = (oldVersion === null) ? null : JSON.parse(oldVersion);
+				version = (version === null) ? null : JSON.parse(version);
 				if (oldVersion != version) {
-					oldVersion = (oldVersion == null) ? null : JSON.parse(oldVersion);
-					version = (version == null) ? null : JSON.parse(version);
 					this.__needUpdate = [oldVersion, version];
 				}
 			}
