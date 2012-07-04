@@ -25,35 +25,9 @@
 		construct : function(property, check, value) {
 			this.__property = property;
 			this.__value = value;
+			this.__check = check;
 			
-			switch (check) {
-				case "contains":
-					this.__matcher = this.__containsMatcher;
-					break;
-				case "contains not":
-					this.__matcher = this.__containsNotMatcher;
-					break;
-				case "=":
-					this.__matcher = this.__equalsMatcher;
-					break;
-				case "!=":
-					this.__matcher = this.__unequalsMatcher;
-					break;
-				case "<":
-					this.__matcher = this.__lowerMatcher;
-					break;
-				case ">":
-					this.__matcher = this.__greaterMatcher;
-					break;
-				case "<=":
-					this.__matcher = this.__lowerEqualsMatcher;
-					break;
-				case ">=":
-					this.__matcher = this.__greaterEqualsMatcher;
-					break;
-				default:
-					throw new Error("Check '" + check + "' is not allowed as property filter");
-			}
+			this.__selectMatcher(check);
 		},
 		
 		members : {
@@ -97,6 +71,64 @@
 			
 			__greaterEqualsMatcher : function(storeEntry, queryValue) {
 				return storeEntry >= queryValue;
+			},
+			
+			__selectMatcher : function(check) {
+				switch (check) {
+					case "contains":
+						this.__matcher = this.__containsMatcher;
+						break;
+					case "contains not":
+						this.__matcher = this.__containsNotMatcher;
+						break;
+					case "=":
+						this.__matcher = this.__equalsMatcher;
+						break;
+					case "!=":
+						this.__matcher = this.__unequalsMatcher;
+						break;
+					case "<":
+						this.__matcher = this.__lowerMatcher;
+						break;
+					case ">":
+						this.__matcher = this.__greaterMatcher;
+						break;
+					case "<=":
+						this.__matcher = this.__lowerEqualsMatcher;
+						break;
+					case ">=":
+						this.__matcher = this.__greaterEqualsMatcher;
+						break;
+					default:
+						throw new Error("Check '" + check + "' is not allowed as property filter");
+				}
+			},
+			
+			sql : function() {
+				var check = this.__check;
+				var property = this.__property;
+				var value = this.__value;
+				
+				switch (check) {
+					case "contains":
+						return {sql: [property + " LIKE ?"], values: ["%"+value+"%"]};
+					case "contains not":
+						return {sql: [property + " NOT LIKE ?"], values: ["%"+value+"%"]};
+					case "=":
+						return {sql: [property + "=?"], values: [value]};
+					case "!=":
+						return {sql: [property + "!=?"], values: [value]};
+					case "<":
+						return {sql: [property + "<?"], values: [value]};
+					case ">":
+						return {sql: [property + ">?"], values: [value]};
+					case "<=":
+						return {sql: [property + "<=?"], values: [value]};
+					case ">=":
+						return {sql: [property + ">=?"], values: [value]};
+					default:
+						throw new Error("Check '" + check + "' is not allowed as property filter");
+				}
 			}
 		}
 	});

@@ -33,6 +33,16 @@
 			
 			match : function(entity) {
 				return this.__filter1.match(entity) || this.__filter2.match(entity);
+			},
+			
+			sql : function() {
+				var f1 = this.__filter1.sql();
+				var f2 = this.__filter2.sql();
+				
+				return {
+					sql: [ f1.sql.join(" AND ") + " OR " + f2.sql.join(" AND ") ],
+					values: f1.values.concat(f2.values)
+				};
 			}
 		}
 	});

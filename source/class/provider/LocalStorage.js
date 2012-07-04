@@ -57,7 +57,10 @@
 			__index : null,
 			__needUpdate : false,
 			
-			checkUpdates : function(callback) {
+			register : function(model) {
+			},
+			
+			open : function(callback) {
 				if (this.__needUpdate !== false) {
 					var v = this.__needUpdate;
 					localStorage.setItem(this.__namespace + "/version", JSON.stringify(v[1]));
@@ -71,19 +74,7 @@
 				}
 			},
 			
-			transaction : function(callback) {
-				callback(new rearside.Transaction(this, null));
-			},
-			
-			commit : function(tx, callback) {
-				callback();
-			},
-			
-			rollback : function(tx, callback) {
-				callback();
-			},
-			
-			countAllEntities : function(tx, callback) {
+			countAllEntities : function(callback) {
 				callback(this.__index.length);
 			},
 			
@@ -118,7 +109,7 @@
 				callback(id);
 			},
 			
-			purge : function(tx, callback) {
+			purge : function(callback) {
 				var index = this.__index;
 				var namespace = this.__namespace;
 				

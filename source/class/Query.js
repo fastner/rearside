@@ -56,6 +56,9 @@
 			},
 			
 			find : function(ids) {
+				if (!(ids instanceof Array)) {
+					ids = [ids];
+				}
 				this.__idFilter = ids;
 				
 				return this;
@@ -112,6 +115,10 @@
 			
 			list : function(callback) {
 				this.__store.query(callback, this.__meta, this.__filter, this.__idFilter, this.__limit, this.__skip, this.__order);
+			},
+			
+			serialize : function() {
+				return this.__idFilter;
 			}
 		}
 	});

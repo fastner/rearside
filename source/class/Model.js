@@ -24,6 +24,7 @@
 	var now = window.now || function() { return (new Date).valueOf(); };
 	
 	var entityCache = {};
+	var entityNames = [];
 	var entityClassCache = {};
 	
 	var createUUID = function() {
@@ -65,6 +66,10 @@
 		
 		getType : function() {
 			return this._meta.name;
+		},
+		
+		getMeta : function() {
+			return this._meta;
 		},
 		
 		dirtyProperties : function() {
@@ -226,6 +231,11 @@
 				
 				if (field) {
 					data[key] = config[key] || getDefaultValue(fields[key]);
+					if (data[key] == "[object Object]") {
+						console.log("////////////////");
+						console.trace();
+						throw new Error("FAIL");
+					}
 					dirtyProperties.push(key);
 				} else {
 					throw new Error("Field " + key + " is not defined in model " + meta.name);
@@ -250,6 +260,10 @@
 		
 		clazz.getName = function() {
 			return name;
+		};
+		
+		clazz.getMeta = function() {
+			return meta;
 		};
 		
 		return clazz;
@@ -289,8 +303,13 @@
 			hasOne: {}
 		};
 		entityCache[name] = meta;
+		entityNames.push(name);
 		
 		return getEntity(name);
 	});
+	
+	rearside.Model.registeredModels = function() {
+		return entityNames;
+	};
 	
 })();

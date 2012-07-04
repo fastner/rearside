@@ -60,7 +60,10 @@
 				return JSON.parse(data);
 			},
 			
-			checkUpdates : function(callback) {
+			register : function(model) {
+			},
+			
+			open : function(callback) {
 				if (this.__needUpdate !== false) {
 					var v = this.__needUpdate;
 					dsVersion[this.__namespace] = v[1];
@@ -74,19 +77,7 @@
 				}
 			},
 			
-			transaction : function(callback) {
-				if (callback) callback(new rearside.Transaction(this, null));
-			},
-			
-			commit : function(tx, callback) {
-				if (callback) callback();
-			},
-			
-			rollback : function(tx, callback) {
-				if (callback) callback();
-			},
-			
-			countAllEntities : function(tx, callback) {
+			countAllEntities : function(callback) {
 				var count = 0;
 				
 				for (var key in this.__data) {
@@ -112,7 +103,7 @@
 				if (callback) callback(id);
 			},
 			
-			purge : function(tx, callback) {
+			purge : function(callback) {
 				this.__data = {};
 				if (callback) callback();
 			},
