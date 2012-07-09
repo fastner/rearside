@@ -72,6 +72,10 @@
 			return this._meta;
 		},
 		
+		getData : function() {
+			return this._data;
+		},
+		
 		dirtyProperties : function() {
 			return this._dirtyProperties.slice();
 		},
