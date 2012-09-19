@@ -2,8 +2,8 @@
 	"name" : "rearside",
 	"requires" : [
 		{
-			"source" : "https://github.com/fastner/core.git",
-			"version" : "m/0.8-beta2"
+			"source" : "https://github.com/zynga/core.git",
+			"version" : "0.8"
 		}, {
 			"source" : "https://github.com/jquery/qunit.git",
 			"version" : "refs/tags/v1.8.0",
