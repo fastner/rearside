@@ -22,7 +22,8 @@
 /**
  * #asset(qunit-xyz.css)
  */
-core.io.Asset.load(["qunit-xyz.css"]);
+var uri = jasy.Asset.toUri("qunit-xyz.css");
+core.io.StyleSheet.load(uri);
 
 localStorage.clear();
 

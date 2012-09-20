@@ -113,7 +113,7 @@
 		},
 		
 		get : function(name) {
-			if (core.Env.getValue("debug")) {
+			if (jasy.Env.getValue("debug")) {
 				if (!this._meta.fields[name]) {
 					throw new Error("No field " + name + " in model " + this._meta.name);
 				}
@@ -138,7 +138,7 @@
 			var field = this._meta.fields[name];
 			var simpleType = (typeof field == "string");
 			
-			if (core.Env.getValue("debug")) {
+			if (jasy.Env.getValue("debug")) {
 				if (!field) {
 					throw new Error("No field " + name + " in model " + this._meta.name);
 				}
@@ -275,7 +275,7 @@
 	
 	core.Main.declareNamespace("rearside.Model", function(name, config) {
 		
-		if (core.Env.isSet("debug")) {
+		if (jasy.Env.isSet("debug")) {
 			if (!core.Module.isModuleName(name)) {
 				throw new Error("Invalid model name " + name + "!");
 			}
@@ -285,7 +285,7 @@
 			return getEntity(name);
 		}
 		
-		if (core.Env.isSet("debug")) {
+		if (jasy.Env.isSet("debug")) {
 			core.Assert.isType(config, "Map", "Invalid model configuration in " + name);
 			
 			if (entityCache[name]) {

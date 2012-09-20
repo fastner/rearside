@@ -45,7 +45,7 @@
 	
 	core.Class("rearside.provider.WebSql", {
 		construct : function(namespace, version, options) {
-			if (core.Env.getValue("debug")) {
+			if (jasy.Env.getValue("debug")) {
 				if (!window.openDatabase) {
 					throw new Error("No WebSQL available");
 				}

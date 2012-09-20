@@ -23,7 +23,7 @@
 
 	core.Class("rearside.Store", {
 		construct : function(storeProvider) {
-			if (core.Env.getValue("debug")) {
+			if (jasy.Env.getValue("debug")) {
 				if (!storeProvider) {
 					throw new Error("No store provider set");
 				}
@@ -76,7 +76,7 @@
 			},
 			
 			add : function(entity) {
-				if (core.Env.getValue("debug")) {
+				if (jasy.Env.getValue("debug")) {
 					this.__checkEntityIsRegistered(entity);
 				}
 				if (!entity.setStore(this)) {
@@ -85,7 +85,7 @@
 			},
 			
 			remove : function(entity) {
-				if (core.Env.getValue("debug")) {
+				if (jasy.Env.getValue("debug")) {
 					this.__checkEntityIsRegistered(entity);
 				}
 				if (entity.removeStore(this)) {
@@ -129,7 +129,7 @@
 				while (entity) {
 					todo++;
 					
-					if (core.Env.getValue("debug")) {
+					if (jasy.Env.getValue("debug")) {
 						this.__checkEntityIsRegistered(entity);
 					}
 					

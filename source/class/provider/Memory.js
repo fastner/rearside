@@ -26,7 +26,7 @@
 	
 	core.Class("rearside.provider.Memory", {
 		construct : function(namespace, version) {
-			if (core.Env.getValue("debug")) {
+			if (jasy.Env.getValue("debug")) {
 				if (!namespace) {
 					throw new Error("Memory provider needs namespace");
 				}

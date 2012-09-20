@@ -23,7 +23,7 @@
 	
 	core.Class("rearside.provider.LocalStorage", {
 		construct : function(namespace, version) {
-			if (core.Env.getValue("debug")) {
+			if (jasy.Env.getValue("debug")) {
 				if (!localStorage) {
 					throw new Error("No local storage available");
 				}
