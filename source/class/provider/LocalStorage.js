@@ -21,6 +21,13 @@
  
 (function(localStorage) {
 	
+	// Call function lazy, so browser don't lock
+	var lazy = function(callback, context, args) {
+		window.setTimeout(function(callback, context, args) {
+			callback.apply(context, args);
+		}, 0, callback, context, args||[]);
+	};
+    
 	core.Class("rearside.provider.LocalStorage", {
 		construct : function(namespace, version) {
 			if (jasy.Env.getValue("debug")) {
@@ -65,17 +72,17 @@
 					var v = this.__needUpdate;
 					localStorage.setItem(this.__namespace + "/version", JSON.stringify(v[1]));
 					if (callback) {
-						callback(true, v[1], v[0]);
+						lazy(callback, this, [true, v[1], v[0]]);
 					}
 				} else {
 					if (callback) {
-						callback(false);
+						lazy(callback, this, [false]);
 					}
 				}
 			},
 			
 			countAllEntities : function(callback) {
-				callback(this.__index.length);
+				lazy(callback, this, [this.__index.length]);
 			},
 			
 			update : function(entity, callback) {
@@ -90,7 +97,7 @@
 					localStorage.setItem(namespace, JSON.stringify(index));
 				}
 				
-				callback(id);
+				lazy(callback, this, [id]);
 			},
 			
 			remove : function(entity, callback) {
@@ -106,7 +113,7 @@
 					localStorage.removeItem(namespace + "/d/" + id);
 				}
 				
-				callback(id);
+				lazy(callback, this, [id]);
 			},
 			
 			purge : function(callback) {
@@ -121,7 +128,7 @@
 				}
 				
 				localStorage.setItem(namespace, "[]");
-				callback();
+				lazy(callback, this);
 			},
 			
 			get : function(id, callback) {
@@ -146,7 +153,8 @@
 				data.data.id = data.id;
 				data.data.timestamp = data.timestamp;
 				var entity = new EntityModel(data.data);
-				callback(entity);
+                
+				lazy(callback, this, [entity]);
 			},
 			
 			count : function(callback, meta, filter, idFilter, limit, skip, orders) {
@@ -202,7 +210,7 @@
 					result = result.slice(skip, skip+limit);
 				}
 				
-				callback(result);
+				lazy(callback, this, [result]);
 			}
 		}
 	});
