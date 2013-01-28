@@ -2,7 +2,7 @@
 	"name" : "rearside",
 	"requires" : [
 		{
-			"source" : "https://github.com/zynga/core.git",
+			"source" : "https://github.com/sebastian-software/core.git",
 			"version" : "0.8.1"
 		}, {
 			"source" : "https://github.com/jquery/qunit.git",
