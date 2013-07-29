@@ -173,7 +173,7 @@
 					var item = localStorage.getItem(namespace + "/d/" + id);
 					var entry = (item == null) ? null : JSON.parse(item);
 					
-					if (meta.name == entry.type) {
+					if (entry != null && meta.name == entry.type) {
 						if ((!idFilter) || (idFilter.indexOf(entry.id) >= 0)) {
 							entry.data.timestamp = entry.timestamp;
 							entry.data.id = entry.id;
